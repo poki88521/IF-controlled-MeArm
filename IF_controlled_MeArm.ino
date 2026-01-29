@@ -23,6 +23,7 @@
 #define C_CODE 1
 //“长按”常量
 #define KEEP 4294967295
+#define NONE 0
 //舵机角度范围常量
 #define F_MIN 0
 #define F_MAX 180
@@ -143,7 +144,7 @@ void loop() {
         case R_CODE:
         case B_CODE:
           location = value;
-          operation = NULL;
+          operation = NONE;
           break;
         default:
           break;
