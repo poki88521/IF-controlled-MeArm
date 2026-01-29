@@ -1,11 +1,10 @@
+
 /*
-操作规则：
-  1.前后箭头控制爪子开合
-    前=开,后=闭
-  2.左右箭头控制前臂、后臂和底盘
-    左=前，右=后
-  3.使用数字1 2 3切换控制位置
-    1=前臂，2=后臂，3=底盘
+1更改操作位置（location）和动作（operation）变量确定操作类型
+2根据location确定操作的上下限
+3改写pos
+4检测pos变量是否合规
+5写入舵机
 */
 
 
@@ -18,12 +17,21 @@
 #define LEFT 16769055
 #define RIGHT 16748655
 
-#define ONE 16724175
-#define TWO 16718055
-#define THREE 16743045
+#define F_CODE 16724175
+#define R_CODE 16718055
+#define B_CODE 16743045
+#define C_CODE 1
 //“长按”常量
 #define KEEP 4294967295
-#define OTHERS 0
+//舵机角度范围常量
+#define F_MIN 0
+#define F_MAX 180
+#define R_MIN 0
+#define R_MAX 180
+#define B_MIN 0
+#define B_MAX 180
+#define C_MIN 0
+#define C_MAX 180
 
 
 //接收器对象
@@ -31,56 +39,96 @@ IRrecv recv(7);
 //接收器结果
 decode_results result;
 //操纵位置变量
-unsigned long opcode = UP;
+unsigned long location;
+unsigned long operation;
+//result.value
+unsigned long value;
 
 //舵机对象
-Servo base, clow, fArm, rArm;
+int posNum;
+Servo servo[4];
 //舵机角度参数
-int bPos, cPos, fPos, rPos;
+int pos[4];
+//clow,fPos,rPos,bPos
+//当前角度上下限参数
+int min, max;
 
-void servoOp(unsigned long opcode){
-  switch(opcode){
-    case UP:
-      base.write(++bPos);
-      return;
-    case DOWN:
-      base.write(--bPos);
-      return;
-    default:
-      return;
+//-----------------------------------函数区----------------------------------------
+//检查舵机角度是否合规的函数
+bool check(){
+  if(pos[posNum] > max){
+    pos[posNum]  = max;
+    return false;
+  }else if(pos[posNum] < min){
+    pos[posNum]  = min;
+    return false;
   }
+  return true;
 }
 
-void operation(unsigned long opcode){
-  switch(opcode){
+void execute(){
+  //根据code选择操作时的判断限制范围
+  switch(location){
+    case F_CODE:
+      min = F_MIN;
+      max = F_MAX;
+      posNum = 1;
+      break;
+    case R_CODE:
+      min = R_MIN;
+      max = R_MAX;
+      posNum = 2;
+      break;
+    case B_CODE:
+      min = B_MIN;
+      max = B_MAX;
+      posNum = 3;
+      break;
+    case C_CODE:
+      min = C_MIN;
+      max = C_MAX;
+      posNum = 0;
+      break;
+    default:
+      break;
+  }
+  //改写pos
+  switch(operation){
     case UP:
-      Serial.println("claw open");
-      return;
-    case DOWN:
-      Serial.println("claw close");
-      return;
     case LEFT:
-      Serial.println("left");
-      return;
+      pos[posNum]++;
+      break;
+    case DOWN:
     case RIGHT:
-      Serial.println("right");
-      return;
+      pos[posNum]--;
+      break;
     default:
-      return;
+      break;
+  }
+  //检查并写入舵机
+  if(check()){
+    servo[posNum].write(pos[posNum]);
+    //打印参数
+    Serial.print(location);
+    Serial.print(",");
+    Serial.print(operation);
+    Serial.print(",");
+    Serial.print(pos[posNum]);
+    Serial.println();
   }
 }
-
 
 void setup() {
   // put your setup code here, to run once:
-  base.attach(3);
-  clow.attach(4);
-  fArm.attach(5);
-  rArm.attach(6);
-  bPos = 0;
-  cPos = 0;
-  fPos = 0;
-  rPos = 0;
+  servo[3].attach(3);//b
+  servo[0].attach(4);//c
+  servo[1].attach(5);//f
+  servo[2].attach(6);//r
+  //初始化角度变量
+  pos[3] = servo[3].read();
+  pos[0] = servo[0].read();
+  pos[1] = servo[1].read();
+  pos[2] = servo[2].read();
   recv.enableIRIn();
   Serial.begin(9600);
 }
@@ -88,44 +136,32 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
     if(recv.decode(&result)){
-      switch(result.value){
-        case ONE:
-          Serial.println("to fArm");
-          opcode = ONE;
-          break;
-        case TWO:
-          Serial.println("to rArm");
-          opcode = TWO;
-          break;
-        case THREE:
-          Serial.println("to base");
-          opcode = THREE;
-          break;
-
-        case UP:
-          Serial.println("claw open");
-          opcode = UP;
-          servoOp(UP);
-          break;
-        case DOWN:
-          Serial.println("claw close");
-          opcode = DOWN;
-          servoOp(DOWN);
-          break;
-        case LEFT:
-          Serial.println("left");
-          opcode = LEFT;
-          break;
-        case RIGHT:
-          Serial.println("right");
-          opcode = RIGHT;
-          break;
-        case KEEP:
-          operation(opcode);
+      value = result.value;
+      //接收location
+      switch(value){
+        case F_CODE:
+        case R_CODE:
+        case B_CODE:
+          location = value;
+          operation = NULL;
           break;
         default:
-          opcode = OTHERS;
-          Serial.println("others");
+          break;
+      }
+      //当操作为operation时不操作舵机
+      ;
+      //接收operation
+      switch(value){
+        case UP:
+        case DOWN:
+          location = C_CODE;
+        case LEFT:
+        case RIGHT:
+          operation = value;
+        case KEEP:
+          execute();
+          break;
+        default:
           break;
       }
       recv.resume();
