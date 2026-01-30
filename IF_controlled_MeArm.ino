@@ -25,14 +25,14 @@
 #define KEEP 4294967295
 #define NONE 0
 //舵机角度范围常量
-#define F_MIN 0
-#define F_MAX 180
-#define R_MIN 0
-#define R_MAX 180
+#define F_MIN 90
+#define F_MAX 130
+#define R_MIN 40
+#define R_MAX 110
 #define B_MIN 0
 #define B_MAX 180
 #define C_MIN 0
-#define C_MAX 180
+#define C_MAX 105
 
 
 //接收器对象
@@ -97,11 +97,11 @@ void execute(){
   switch(operation){
     case UP:
     case LEFT:
-      pos[posNum]++;
+      pos[posNum] += 2;
       break;
     case DOWN:
     case RIGHT:
-      pos[posNum]--;
+      pos[posNum] -= 2;
       break;
     default:
       break;
@@ -115,6 +115,8 @@ void execute(){
     Serial.print(operation);
     Serial.print(",");
     Serial.print(pos[posNum]);
+    Serial.print(",");
+    Serial.print(servo[posNum].read());
     Serial.println();
   }
 }
@@ -126,10 +128,15 @@ void setup() {
   servo[1].attach(5);//f
   servo[2].attach(6);//r
   //初始化角度变量
-  pos[3] = servo[3].read();
-  pos[0] = servo[0].read();
-  pos[1] = servo[1].read();
-  pos[2] = servo[2].read();
+  pos[3] = 90;
+  pos[0] = 90;
+  pos[1] = 100;
+  pos[2] = 50;
+
+  servo[3].write(pos[3]);
+  servo[0].write(pos[0]);
+  servo[1].write(pos[1]);
+  servo[2].write(pos[2]);
   recv.enableIRIn();
   Serial.begin(9600);
 }
