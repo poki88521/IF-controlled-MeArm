@@ -21,6 +21,9 @@
 #define R_CODE 16718055
 #define B_CODE 16743045
 #define C_CODE 1
+#define HI_SPEED 16753245
+#define LO_SPEED 16769565
+
 //“长按”常量
 #define KEEP 4294967295
 #define NONE 0
@@ -53,6 +56,7 @@ int pos[4];
 //clow,fPos,rPos,bPos
 //当前角度上下限参数
 int min, max;
+int step;
 
 //-----------------------------------函数区----------------------------------------
 //检查舵机角度是否合规的函数
@@ -97,11 +101,11 @@ void execute(){
   switch(operation){
     case UP:
     case LEFT:
-      pos[posNum] += 2;
+      pos[posNum] += step;
       break;
     case DOWN:
     case RIGHT:
-      pos[posNum] -= 2;
+      pos[posNum] -= step;
       break;
     default:
       break;
@@ -132,7 +136,7 @@ void setup() {
   pos[0] = 90;
   pos[1] = 100;
   pos[2] = 50;
-
+  step = 2;
   servo[3].write(pos[3]);
   servo[0].write(pos[0]);
   servo[1].write(pos[1]);
@@ -152,6 +156,16 @@ void loop() {
         case B_CODE:
           location = value;
           operation = NONE;
+          break;
+        case HI_SPEED:
+          step = 7;
+          operation = NONE;
+          Serial.println(step);
+          break;
+        case LO_SPEED:
+          step = 2;
+          operation = NONE;
+          Serial.println(step);
           break;
         default:
           break;

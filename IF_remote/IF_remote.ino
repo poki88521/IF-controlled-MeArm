@@ -14,6 +14,9 @@ right:16748655
 6:16734885
 
 option:16754775
+
+A:16753245
+C:16769565
 */
 
 
@@ -30,26 +33,7 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   if(recv.decode(&result)){
-    switch(result.value){
-      case 16712445:
-        Serial.println("up");
-        break;
-      case 16750695:
-        Serial.println("down");
-        break;
-      case 16769055:
-        Serial.println("left");
-        break;
-      case 16748655:
-        Serial.println("right");
-        break;
-      case 4294967295:
-        
-        break;
-      default:
-        break;
-    }
-
+    Serial.println(result.value);
     recv.resume();
   }
   
