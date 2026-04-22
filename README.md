@@ -4,12 +4,14 @@
 - 基于开源项目MeArm的红外控制程序设计<br>
 - 源项目在[这里](https://github.com/MeArm/MeArm)
 
-## 1.主要元件
+## 1.主要元件/库
 - MeArm机械臂套件<br>
 - HS-S23P 32K红外遥控控制模块及遥控器<br>
 - sg90舵机（180度） * 4<br>
 - Arduino Nano开发板<br>
 - ~~电源模块（懒得买）~~
+- Servo 1.3.0
+- IRremote 3.7.1
 
 ## 2.操作规则
 + 前后箭头控制爪子开合
